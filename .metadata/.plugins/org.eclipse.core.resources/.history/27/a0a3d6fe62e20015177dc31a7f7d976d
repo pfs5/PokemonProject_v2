@@ -1,0 +1,5 @@
+package hr.pfs.input;
+
+public class Keyboard {
+
+}

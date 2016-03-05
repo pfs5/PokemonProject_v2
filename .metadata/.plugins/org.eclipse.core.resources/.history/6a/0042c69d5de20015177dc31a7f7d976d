@@ -1,0 +1,44 @@
+package hr.pfs.graphics;
+
+public class Map {
+	
+	public Map (String mapName) {
+		load(mapName);
+	}
+	
+	private void load (String mapName) {
+		//Print message
+		System.out.println("Loading map: "+mapName);
+	}
+
+	private void printMemory() {
+		//Getting the runtime reference from system
+		Runtime runtime = Runtime.getRuntime();
+
+		int mb = 1024*1024;
+
+		System.out.println("");
+		System.out.println("");
+
+		System.out.println("##### Heap utilization statistics [MB] #####");
+
+		//Print used memory
+		System.out.println("Used Memory: "
+				+ (runtime.totalMemory() - runtime.freeMemory()) / mb + " MB");
+
+		//Print free memory
+		System.out.println("Free Memory: "
+				+ runtime.freeMemory() / mb + " MB");
+
+		//Print total available memory
+		System.out.println("Total Memory: " + runtime.totalMemory() / mb + " MB");
+
+		//Print Maximum available memory
+		System.out.println("Max Memory: " + runtime.maxMemory() / mb + " MB");
+
+		System.out.println("");
+		System.out.println("");
+
+	}
+	
+}

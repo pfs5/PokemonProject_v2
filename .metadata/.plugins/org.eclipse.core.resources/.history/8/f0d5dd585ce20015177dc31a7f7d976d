@@ -1,0 +1,13 @@
+package hr.pfs.graphics;
+
+public class Map {
+	
+	public Map (String mapName) {
+		initMap(mapName);
+	}
+	
+	private void initMap (String mapName) {
+		
+	}
+
+}

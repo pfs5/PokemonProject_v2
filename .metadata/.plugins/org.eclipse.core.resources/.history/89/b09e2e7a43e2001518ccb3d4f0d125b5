@@ -1,0 +1,12 @@
+package hr.pfs.main;
+
+public class GlobalSettings {
+	
+	//Screen settings
+	public static final String gTITLE = "Game";
+	public static final double gRATIO = 9./16.;
+	public static final int gWIDTH = 300;
+	public static final int gHEIGHT = (int) (gWIDTH * gRATIO);
+	public static final int gSCALE = 3;
+	
+}

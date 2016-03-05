@@ -1,0 +1,187 @@
+package hr.pfs.main;
+
+import static hr.pfs.main.GlobalSettings.*;
+
+import java.awt.Canvas;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.event.KeyEvent;
+import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+
+import javax.swing.JFrame;
+
+import hr.pfs.graphics.Screen;
+import hr.pfs.input.Keyboard;
+
+public class Game extends Canvas implements Runnable{
+	
+	private static final long serialVersionUID = 1L;
+	
+	//Game thread
+	private Thread thread;
+	private JFrame frame;
+	private boolean running = false;
+	
+	//Game view
+	private BufferedImage image = new BufferedImage(gWIDTH, gHEIGHT,BufferedImage.TYPE_INT_RGB);
+	private int[] pixels = ((DataBufferInt)image.getRaster().getDataBuffer()).getData();
+	
+	private Screen screen;
+	private Keyboard keyboard;
+	
+	//Game speed
+	private int gameSpeed = DEFAULT_SPEED;
+	
+	public Game() {
+		Dimension size = new Dimension(gWIDTH*gSCALE, gHEIGHT*gSCALE);
+		setPreferredSize(size);
+		
+		screen = new Screen();
+		frame = new JFrame();
+		keyboard = new Keyboard();
+		
+		frame.addKeyListener(keyboard);
+	}
+	
+	public synchronized void start() {
+		running = true;
+		thread = new Thread(this, "Display");
+		thread.start();
+	}
+	
+	public synchronized void stop() {
+		running = false;
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void run() {
+		long lastTime = System.nanoTime();
+		long timer = System.currentTimeMillis();
+		double ns = 1000000000.0 / (UPS*gameSpeed);
+		double delta = 0;
+		
+		int frames = 0;
+		int updates = 0;
+		
+		while (running) {
+			ns = 1000000000.0 / (UPS*gameSpeed);
+			long now = System.nanoTime();
+			delta += (now-lastTime) / ns;
+			lastTime = now;
+			
+			//Update part
+			while (delta >=1) {
+				update();
+				updates++;
+				delta--;
+			}
+			
+			//Render part
+			render();
+			frames++;
+			
+			//FPS, UPS calculation
+			if ((System.currentTimeMillis() - timer) > 1000) {
+				timer+=1000;
+				frame.setTitle(gTITLE + " | " + "ups: "+ updates + " fps: " + frames);
+				
+				updates = 0;
+				frames = 0;
+			}
+		}
+		
+		stop();
+	}
+	
+	public void update() {
+		
+		getKeyGame();
+		screen.update();
+	}
+	
+	public void render() {
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null) {
+			createBufferStrategy(3);
+			return;
+		}
+		
+		//Render screen
+		screen.render();
+		for (int i=0; i<pixels.length; i++)
+			pixels[i] = screen.pixels[i];
+
+		Graphics g = bs.getDrawGraphics();
+		//Drawing part
+		g.drawImage(image, 0, 0, getWidth(),getHeight(),null);
+		
+		g.dispose();
+		bs.show();
+	}
+	
+	public void getKeyGame () {
+		//WASD
+		if (keyboard.keys[KeyEvent.VK_W])
+			screen.setMove("U");
+
+		if (keyboard.keys[KeyEvent.VK_A])
+			screen.setMove("L");
+
+		if (keyboard.keys[KeyEvent.VK_S])
+			screen.setMove("D");
+
+		if (keyboard.keys[KeyEvent.VK_D]) 
+			screen.setMove("R");
+
+		//ARROW KEYS
+		if (keyboard.keys[KeyEvent.VK_UP])
+			screen.setMove("U");
+
+		if (keyboard.keys[KeyEvent.VK_LEFT])
+			screen.setMove("L");
+
+		if (keyboard.keys[KeyEvent.VK_DOWN])
+			screen.setMove("D");
+
+		if (keyboard.keys[KeyEvent.VK_RIGHT]) 
+			screen.setMove("R");
+
+		//SPEED
+		if (keyboard.keys[KeyEvent.VK_SPACE])
+			setSpeed();
+
+		if (keyboard.keys[KeyEvent.VK_SPACE] == false)
+			resetSpeed();
+	}
+	
+	private void setSpeed() {
+		gameSpeed = MAX_SPEED;
+	}
+	
+	private void resetSpeed() {
+		gameSpeed = DEFAULT_SPEED;
+	}
+	
+	public static void main(String[] args) {
+		Game game = new Game();
+		
+		//Configure game window
+		game.frame.setResizable(false);
+		game.frame.setTitle(gTITLE);
+		game.frame.add(game);
+		game.frame.pack();
+		game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		game.frame.setLocationRelativeTo(null);
+		game.frame.setVisible(true);
+		
+		game.start();
+	}
+	
+
+}

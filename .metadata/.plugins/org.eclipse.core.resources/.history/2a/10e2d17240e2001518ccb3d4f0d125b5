@@ -1,0 +1,97 @@
+package hr.pfs.main;
+
+import static hr.pfs.main.GlobalSettings.*;
+
+import java.awt.Canvas;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.image.BufferStrategy;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferInt;
+
+import javax.swing.JFrame;
+
+import hr.pfs.graphics.Screen;
+
+public class Game extends Canvas implements Runnable{
+	
+	private static final long serialVersionUID = 1L;
+	
+	//Game thread
+	private Thread thread;
+	private JFrame frame;
+	private boolean running = false;
+	
+	//Game view
+	private BufferedImage image = new BufferedImage(gWIDTH, gHEIGHT,BufferedImage.TYPE_INT_RGB);
+	private int[] pixels = ((DataBufferInt)image.getRaster().getDataBuffer()).getData();
+	
+	private Screen screen;
+	
+	public Game() {
+		Dimension size = new Dimension(gWIDTH*gSCALE, gHEIGHT*gSCALE);
+		setPreferredSize(size);
+		
+		frame = new JFrame();
+		
+	}
+	
+	public synchronized void start() {
+		running = true;
+		thread = new Thread(this, "Display");
+		thread.start();
+	}
+	
+	public synchronized void stop() {
+		running = false;
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void run() {
+		while (running) {
+			update();
+			render();
+		}
+	}
+	
+	public void update() {
+		
+	}
+	
+	public void render() {
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null) {
+			createBufferStrategy(3);
+			return;
+		}
+		
+		Graphics g = bs.getDrawGraphics();
+		
+		//Drawing part
+		
+		
+		g.dispose();
+		bs.show();
+	}
+	
+	public static void main(String[] args) {
+		Game game = new Game();
+		
+		//Configure game window
+		game.frame.setResizable(false);
+		game.frame.setTitle(gTITLE);
+		game.frame.add(game);
+		game.frame.pack();
+		game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		game.frame.setLocationRelativeTo(null);
+		game.frame.setVisible(true);
+		
+		game.start();
+	}
+	
+
+}

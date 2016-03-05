@@ -1,0 +1,176 @@
+package hr.pfs.game.graphics;
+
+import hr.pfs.game.main.Global;
+
+public class Screen {
+
+	//Main window variables
+	private int width;
+	private int height;
+	private int scale;
+	public int[] pixels;		//Current window
+
+	//Base block size
+	public int BASE;
+
+	//State variables
+	private String direction;
+	private boolean updated;
+	private boolean moving;
+	private boolean movable;
+	private boolean turning;
+
+	//Moving
+	private int tick;
+
+	//Position
+	private int xOffset;
+	private int yOffset;
+
+	//Map
+	private Map currentMap;
+	private int mapWidth;
+	private int mapHeight;
+
+	public Screen () {
+		this.width = Global.scaledWidth;
+		this.height = Global.scaledHeight;
+		this.scale = Global.SCALE;
+		this.BASE = Global.BASE;
+
+		xOffset = Global.xOffset;
+		yOffset = Global.yOffset;
+
+		pixels = new int [width*height];
+
+		//Initial state
+		updated = true;
+		movable = true;
+		moving = false;
+		turning = false;
+		direction = "N";
+
+		//Load images
+		load();
+	}
+
+	private void load () {
+		currentMap = new Map("map001");
+		mapWidth = currentMap.getMapWidth();
+		mapHeight = currentMap.getMapHeight();
+	}
+
+	//Clear screen
+	public void clear () {
+		for (int y=0; y<height; y++)
+			for (int x=0; x<width; x++) {
+				pixels[x+width*y] = 0x000000;
+			}
+	}
+
+	//Draw
+	public void render () {
+		if (updated) {
+			MapPixel [] mapPixels = currentMap.getPixels();
+
+			for (int y=0; y<height; y++) {
+				int mapY = (y+yOffset)/scale;
+
+				for (int x=0; x<width; x++) {
+					int mapX = (x+xOffset)/scale;
+					int mapIndex = mapY*mapWidth + mapX;
+					int windowIndex = width*y+x;
+
+					//Draw bottom layer
+					if (mapPixels[mapIndex].getBottom()!=0)
+						pixels[windowIndex] = mapPixels[mapIndex].getBottom();
+
+					//Draw middle layer
+
+					//Draw top layer
+					if (mapPixels[mapIndex].getTop()!=0)
+						pixels[windowIndex] = mapPixels[mapIndex].getTop();
+				}
+			}
+		}
+	}
+
+	public void move () {
+		if (moving == true && movable == true) {
+
+			//Move
+			if (direction.equals("U"))
+				yOffset-=scale;
+			if (direction.equals("D"))
+				yOffset+=scale;
+			if (direction.equals("L"))
+				xOffset-=scale;
+			if (direction.equals("R"))
+				xOffset+=scale;
+
+			//Tick
+			tick++;
+
+			//Check end of moving action
+			if (tick == BASE) {
+				moving = false;
+				tick = 0;
+			}
+
+			//Check map edges
+			if (xOffset<0)
+				xOffset = 0;
+			if (yOffset<0)
+				yOffset = 0;
+
+			if (xOffset+width>mapWidth*scale)
+				xOffset--;
+			if (yOffset+height>mapHeight*scale)
+				yOffset--;
+		}
+	}
+
+	//Set new moving direction
+	public void setMove (String direction) {
+		if  (moving == false) {
+			//Set direction
+			this.direction = direction;
+
+			//Reset tick and start move
+			tick = 0;
+			moving = true;
+		}
+
+	}
+
+	public static void printMemory() {
+		//Getting the runtime reference from system
+		Runtime runtime = Runtime.getRuntime();
+
+		int mb = 1024*1024;
+
+		System.out.println("");
+		System.out.println("");
+
+		System.out.println("##### Heap utilization statistics [MB] #####");
+
+		//Print used memory
+		System.out.println("Used Memory: "
+				+ (runtime.totalMemory() - runtime.freeMemory()) / mb + " MB");
+
+		//Print free memory
+		System.out.println("Free Memory: "
+				+ runtime.freeMemory() / mb + " MB");
+
+		//Print total available memory
+		System.out.println("Total Memory: " + runtime.totalMemory() / mb + " MB");
+
+		//Print Maximum available memory
+		System.out.println("Max Memory: " + runtime.maxMemory() / mb + " MB");
+
+		System.out.println("");
+		System.out.println("");
+
+	}
+
+}

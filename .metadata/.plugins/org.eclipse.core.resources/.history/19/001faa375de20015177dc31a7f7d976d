@@ -1,0 +1,24 @@
+package hr.pfs.graphics;
+
+public class MapPixel {
+	
+	private int color;
+	private int data;
+	
+	public MapPixel (int color, int data) {
+		this.color = color;
+		this.data = data;
+	}
+	
+	public int getBottom() {
+		return color;
+	}
+	
+	public int getTop() {
+		
+	}
+
+	public int getData() {
+		return data;
+	}
+}

@@ -1,0 +1,46 @@
+package hr.pfs.graphics;
+
+import static hr.pfs.main.GlobalSettings.*;
+
+import java.util.Random;
+
+public class Screen {
+	
+	public int[] pixels;
+	public int[] tiles = new int[64*64];;
+	
+	private int xOffset;
+	private int yOffset;
+	
+	public Screen() {
+		pixels = new int[gWIDTH*gHEIGHT];
+		
+		//Initial offset
+		xOffset = xOFFSET_INIT;
+		yOffset = yOFFSET_INIT;
+		
+		//Create tiles
+		Random random = new Random();
+		for (int i=0; i<64*64; i++)
+			tiles[i] = random.nextInt(0xffffff);
+	}
+	
+	public void render() {
+		for (int y=0; y<gHEIGHT; y++) {
+			int yy = y + yOffset;
+			int yMap = yy / 16;
+			for (int x=0; x<gWIDTH; x++) {
+				int xx = x + xOffset;
+				int xMap = xx / 16;
+				int mapIndex = yMap*64 + xMap;
+				int pixelIndex = yy*gWIDTH + xx;
+				pixels[pixelIndex] = tiles[mapIndex];
+			}
+		}
+	}
+	
+	public void update() {
+//		xOffset++;
+	}
+	
+}

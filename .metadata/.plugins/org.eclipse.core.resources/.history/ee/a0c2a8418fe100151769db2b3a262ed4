@@ -1,0 +1,5 @@
+package hr.pfs.game.main;
+
+public class GameLoop {
+
+}
