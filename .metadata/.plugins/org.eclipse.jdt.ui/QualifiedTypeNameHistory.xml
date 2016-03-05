@@ -7,4 +7,5 @@
 <fullyQualifiedTypeName name="java.util.ArrayList"/>
 <fullyQualifiedTypeName name="hr.pfs.graphics.Character"/>
 <fullyQualifiedTypeName name="javax.swing.plaf.synth.SynthSeparatorUI"/>
+<fullyQualifiedTypeName name="hr.pfs.main.GlobalSettings.STATE"/>
 </qualifiedTypeNameHistroy>

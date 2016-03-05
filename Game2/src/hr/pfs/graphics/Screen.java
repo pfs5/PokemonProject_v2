@@ -8,7 +8,6 @@ import javax.swing.plaf.synth.SynthSeparatorUI;
 
 
 public class Screen {
-
 	public int[] pixels;
 	public Map currentMap;
 	public MapPixel[] currentMapPixels;
@@ -103,8 +102,9 @@ public class Screen {
 	public void update() {
 		//Update characters
 		for (Character current : characterList) 
-			current.update();
+			current.update(xOffset, yOffset, currentMap.getMapWidth(), moving, direction);
 		
+		//Update main character
 		if (moving || turning) {
 			if (moving) {
 				if (direction.equals("U"))
@@ -121,6 +121,7 @@ public class Screen {
 
 			//Check terrain obstacle
 			checkTerrain();
+			checkCharacterColision();
 
 			//Switch images when half way done
 			if (tick == BASE / 2) {
@@ -136,7 +137,6 @@ public class Screen {
 				movable = true;
 			}
 		}
-		
 	}
 
 	private void checkTerrain() {
@@ -166,6 +166,96 @@ public class Screen {
 		if (direction.equals("D"))
 			if (currentMapPixels[indexBL].getData()!=0xffffffff || currentMapPixels[indexBR].getData()!=0xffffffff)
 				yOffset--;
+	}
+
+	private void checkCharacterColision() {
+		//Main character base location
+		int x = xMAIN+xOffset;
+		int y = yMAIN+(cSIZE_Y-BASE)+yOffset;
+
+		//Edge pixels
+		int xTLm = x;
+		int yTLm = y;
+
+		int xBLm = xTLm;
+		int yBLm = yTLm+BASE-1;
+
+		int xTRm = xTLm+BASE-1;
+		int yTRm = yTLm;
+
+		int xBRm = xTLm+BASE-1;
+		int yBRm = yTLm+BASE-1;
+
+		for (Character current : characterList) {
+			//Current character check area
+			int xc = current.getX();
+			int yc = current.getY() + current.getHeight()-BASE;
+			//Round to base
+			if (xc%BASE != 0 || yc%BASE != 0) {
+				if (current.getDirection().equals("L"))
+					xc = (xc/BASE)*BASE + BASE;
+				if (current.getDirection().equals("R"))
+					xc = (xc/BASE)*BASE;
+				if (current.getDirection().equals("U"))
+					yc = (yc/BASE)*BASE + BASE;
+				if (current.getDirection().equals("D"))
+					yc = (yc/BASE)*BASE;
+			}
+
+			int xTLc = xc;
+			int yTLc = yc;
+
+			int xBLc = xTLc;
+			int yBLc = yTLc+BASE-1;
+
+			int xTRc = xTLc+BASE-1;
+			int yTRc = yTLc;
+
+			int xBRc = xTLc+BASE-1;
+			int yBRc = yTLc+BASE-1;
+
+			//If character is moving, expand area
+			if (current.getMoving()) {
+				if (current.getDirection().equals("L")) {
+					xTLc-=BASE;
+					xBLc-=BASE;
+				}
+				if (current.getDirection().equals("R")) {
+					xTRc+=BASE;
+					xBRc+=BASE;
+				}
+				if (current.getDirection().equals("U")) {
+					yTLc-=BASE;
+					yTRc-=BASE;
+				}
+				if (current.getDirection().equals("D")) {
+					yTLc+=BASE;
+					yTRc+=BASE;
+				}
+			}
+
+			//Left
+			if (direction.equals("L")) {
+				if (xTLm>=xTLc && xTLm<=xTRc && yTLm>=yTLc && yTLm<=yBLc)
+					xOffset++;
+			}
+			//Right
+			if (direction.equals("R")) {
+				if (xTRm>=xTLc && xTRm<=xTRc && yTRm>=yTLc && yTRm<=yBLc)
+					xOffset--;
+			}
+			//Up
+			if (direction.equals("U")) {
+				if (xTLm>=xTLc && xTLm<=xTRc && yTLm>=yTLc && yTLm<=yBLc)
+					yOffset++;
+			}
+			//Down
+			if (direction.equals("D")) {
+				if (xBLm>=xTLc && xBLm<=xTRc && yBLm>=yTLc && yBLm<=yBLc)
+					yOffset--;
+			}
+
+		}
 	}
 
 	public void setMove(String direction) {

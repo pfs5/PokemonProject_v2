@@ -19,7 +19,8 @@ public class Character {
 	private String moveRoutine;
 	private int moveIndex;
 
-	private boolean moving = true;
+	private boolean moving = false;
+	private boolean movable = true;
 	private boolean turning = false;
 	private int tick = 0;
 
@@ -48,6 +49,10 @@ public class Character {
 		this.y = initY;
 
 		this.moveRoutine = moveRoutine;
+		if (moveRoutine == null) {
+			moving = false;
+			movable = false;
+		}
 		moveIndex = 0;
 
 		this.direction = direction;
@@ -97,55 +102,163 @@ public class Character {
 		} 
 	}
 
-	public void update () {
-		if (moving || turning) {
-			if (moving) {
-				if (direction.equals("U"))
-					y--;
-				if (direction.equals("D"))
-					y++;
-				if (direction.equals("L"))
-					x--;
-				if (direction.equals("R"))
-					x++;
-			}
+	public void update (int xOffset, int yOffset, int mapWidth, boolean mainMoving, String mainDirection) {
 
-			tick++;
+		//Moving characters
+		if (movable) {
+			if (!moving && !turning) {
+				String oldDirection = direction;
+				direction = moveRoutine.charAt(moveIndex) + "";
 
-			//Check terrain obstacle
-			//			checkTerrain();
+				//If the next move is in the same direction
+				if (oldDirection.equals(direction) || direction.equals("N") || oldDirection.equals("N")) {
+					//Try to move
+					if (direction.equals("U"))
+						y--;
+					if (direction.equals("D"))
+						y++;
+					if (direction.equals("L"))
+						x--;
+					if (direction.equals("R"))
+						x++;
 
-			//Switch images when half way done
-			if (tick == BASE / 2) {
-				resetStep();
-			}
+					//Check if move possible
+					boolean move = true;
+					if (!direction.equals("N"))
+						move = checkTerrain(xOffset, yOffset, mapWidth, mainMoving, mainDirection);
 
-			//Check end of block move
-			if (tick >= BASE) {
-				tick = 0;
-				moving = false;
-				turning = false;
+					if (move) {
+						//Revert move try
+						if (direction.equals("U"))
+							y++;
+						if (direction.equals("D"))
+							y--;
+						if (direction.equals("L"))
+							x++;
+						if (direction.equals("R"))
+							x--;
 
-				//Next step
-				moveIndex++;
-				moveIndex%=moveRoutine.length();
-				String newDirection = moveRoutine.charAt(moveIndex) + "";
-				if (newDirection.equals(direction) || direction.equals("N")) {
-					moving = true;
+						moving = true;
+						setStep();
+					}
 				}
-				else
+				//If the next move requires a turn
+				else {
+					//Load images for new direction
+					if (!direction.equals("N")) {
+						String path = "/characters/"+mapName+"/"+charName+""+direction;
+						loadImage(path);
+					}
+
 					turning = true;
+					setStep();
+				}
+			}
 
-				direction = newDirection;
-				setStep();
+			if (moving || turning) {
+				if (moving) {
+					if (direction.equals("U"))
+						y--;
+					if (direction.equals("D"))
+						y++;
+					if (direction.equals("L"))
+						x--;
+					if (direction.equals("R"))
+						x++;
+				}
 
-				//Load images
-				if (!direction.equals("N")) {
-					String path = "/characters/"+mapName+"/"+charName+""+direction;
-					loadImage(path);
+				tick++;
+
+				//Switch images when half way done
+				if (tick == BASE / 2) {
+					resetStep();
+				}
+
+				//Check end of block move
+				if (tick >= BASE) {
+					tick = 0;
+					moving = false;
+					turning = false;
+
+					moveIndex++;
+					moveIndex%=moveRoutine.length();
 				}
 			}
 		}
+	}
+
+	private boolean checkTerrain(int xOffset, int yOffset, int mapWidth, boolean mainMoving, String mainDirection) {
+		boolean move = true;
+
+		//Edge pixels
+		int xTL = x;
+		int yTL = y+height-BASE;
+
+		int xBL = xTL;
+		int yBL = yTL+BASE-1;
+
+		int xTR = xTL+BASE-1;
+		int yTR = yTL;
+
+		int xBR = xTL+BASE-1;
+		int yBR = yTL+BASE-1;
+
+		//If the main character is moving, expand checking area
+//		if (mainMoving) {
+//			if (mainDirection.equals("L")) {
+//				xTL-=BASE;
+//				xBL-=BASE;
+//			}
+//			if (mainDirection.equals("R")) {
+//				xTR+=BASE;
+//				xBR+=BASE;
+//			}
+//			if (mainDirection.equals("U")) {
+//				yTL-=BASE;
+//				yTR-=BASE;
+//			}
+//			if (mainDirection.equals("D")) {
+//				yTL+=BASE;
+//				yTR+=BASE;
+//			}
+//		}
+
+		//Left
+		if (direction.equals("L"))
+			if (checkTerrain(xTL,yTL,xOffset,yOffset) || checkTerrain(xBL,yBL,xOffset,yOffset)) {
+				x++;
+				move = false;
+			}
+		//Right
+		if (direction.equals("R"))
+			if (checkTerrain(xTR,yTR,xOffset,yOffset) || checkTerrain(xBR,yBR,xOffset,yOffset)) {
+				x--;
+				move = false;
+			}
+		//Up
+		if (direction.equals("U"))
+			if (checkTerrain(xTL,yTL,xOffset,yOffset) || checkTerrain(xTR,yTR,xOffset,yOffset)) {
+				y++;
+				move = false;
+			}
+		//Down
+		if (direction.equals("D"))
+			if (checkTerrain(xBL,yBL,xOffset,yOffset) || checkTerrain(xBR,yBR,xOffset,yOffset)) {
+				y--;
+				move = false;
+			}
+		return move;
+	}
+
+	private boolean checkTerrain(int x, int y, int xOffset, int yOffset) {
+		int mainX = xMAIN+xOffset;
+		int mainY = yMAIN+(cSIZE_Y-BASE)+yOffset;
+
+		if (x>=mainX && x<mainX+BASE && y>=mainY && y<mainY+BASE) {
+			return true;
+		}
+
+		return false;
 	}
 
 	public int getX() {
@@ -178,6 +291,10 @@ public class Character {
 
 	public int getHeight() {
 		return height;
+	}
+
+	public boolean getMoving() {
+		return moving;
 	}
 
 	public int[] getPixels() {

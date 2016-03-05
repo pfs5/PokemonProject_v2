@@ -19,6 +19,9 @@ public class Game extends Canvas implements Runnable{
 	
 	private static final long serialVersionUID = 1L;
 	
+	//Game state
+	private STATE gameState;
+	
 	//Game thread
 	private Thread thread;
 	private JFrame frame;
@@ -41,6 +44,8 @@ public class Game extends Canvas implements Runnable{
 		screen = new Screen();
 		frame = new JFrame();
 		keyboard = new Keyboard();
+		
+		gameState = STATE.GAME;
 		
 		frame.addKeyListener(keyboard);
 	}
@@ -102,7 +107,8 @@ public class Game extends Canvas implements Runnable{
 	public void update() {
 		
 		getKeyGame();
-		screen.update();
+		if (gameState == STATE.GAME)
+			screen.update();
 	}
 	
 	public void render() {
@@ -159,6 +165,14 @@ public class Game extends Canvas implements Runnable{
 
 		if (keyboard.keys[KeyEvent.VK_SPACE] == false)
 			resetSpeed();
+	
+		//PAUSE
+		if (keyboard.isPause())
+			if (gameState == STATE.GAME)
+				gameState = STATE.PAUSE;
+			else
+				gameState = STATE.GAME;
+	
 	}
 	
 	private void setSpeed() {
